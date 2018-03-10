@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"path"
@@ -105,8 +106,10 @@ func (owner *Owner) fetchRepos() error {
 		owner.repos = append(owner.repos, *repo)
 	} else {
 		// org or user account type, would fail if not valid before
-		tokenClient := githubTokenClient()
-		gitClient := github.NewClient(tokenClient)
+		gitClient, err := githubClient(opts.URL, opts.EnterpriseURL)
+		if err != nil {
+			return err
+		}
 
 		if owner.accountType == "org" {
 			// org account type
@@ -272,4 +275,25 @@ func githubTokenClient() *http.Client {
 	)
 	tokenClient := oauth2.NewClient(context.Background(), tokenService)
 	return tokenClient
+}
+
+// githubClient will return an appropriate client based on the repo URL and/or
+// the enterprise URL that is provided.
+func githubClient(repoURL string, enterpriseURL string) (*github.Client, error) {
+	fmt.Printf("DEBUG: our url is: %s\n\n", opts.URL)
+
+	u, err := url.Parse(repoURL)
+	if err != nil {
+		return &github.Client{}, err
+	}
+
+	tokenClient := githubTokenClient()
+
+	if u.Hostname() == "github.com" {
+		fmt.Printf("DEBUG: found a github.com address")
+		return github.NewClient(tokenClient), nil
+	} else {
+		fmt.Printf("DEBUG: found an enterprise github address")
+		return github.NewEnterpriseClient(enterpriseURL, enterpriseURL, tokenClient)
+	}
 }

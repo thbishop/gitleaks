@@ -30,6 +30,7 @@ Options:
  -h --help 		Display this message
  --token=<STR>    	Github API token
  --stopwords  		Enables stopwords
+ --enterprise-url   Base URL for GitHub Enterprise API
 
 `
 
@@ -54,6 +55,7 @@ type Options struct {
 	Token        string
 	Verbose  bool
 	RegexFile string
+    EnterpriseURL string
 }
 
 // help prints the usage string and exits
@@ -170,6 +172,8 @@ func (opts *Options) parseOptions(args []string) error {
 				opts.ReportPath = value
 			} else if match, value := opts.optString(arg, "--clone-path="); match {
 				opts.ClonePath = value
+            } else if match, value := opts.optString(arg, "--enterprise-url="); match {
+                opts.EnterpriseURL = value
 			} else if match, value := opts.optInt(arg, "--b64Entropy="); match {
 				opts.B64EntropyCutoff = value
 			} else if match, value := opts.optInt(arg, "--hexEntropy="); match {
@@ -182,13 +186,8 @@ func (opts *Options) parseOptions(args []string) error {
 				if opts.LocalMode {
 					opts.RepoPath = filepath.Clean(args[i])
 				} else {
-					if isGithubTarget(args[i]) {
-						opts.URL = args[i]
-					} else {
-						help()
-						return fmt.Errorf("Unknown option %s\n", arg)
-					}
-				}
+				    opts.URL = args[i]
+                }
 			} else {
 				help()
 				return fmt.Errorf("Unknown option %s\n", arg)
@@ -263,8 +262,6 @@ func (opts *Options) failF(format string, args ...interface{}) {
 func (opts *Options) guards() error {
 	if (opts.RepoMode || opts.OrgMode || opts.UserMode) && opts.LocalMode {
 		return fmt.Errorf("Cannot run Gitleaks on repo/user/org mode and local mode\n")
-	} else if (opts.RepoMode || opts.OrgMode || opts.UserMode) && !isGithubTarget(opts.URL) {
-		return fmt.Errorf("Not valid github target %s\n", opts.URL)
 	} else if (opts.RepoMode || opts.UserMode) && opts.OrgMode {
 		return fmt.Errorf("Cannot run Gitleaks on more than one mode\n")
 	} else if (opts.OrgMode || opts.UserMode) && opts.RepoMode {
