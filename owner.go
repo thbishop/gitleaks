@@ -290,10 +290,8 @@ func githubClient(repoURL string, enterpriseURL string) (*github.Client, error) 
 	tokenClient := githubTokenClient()
 
 	if u.Hostname() == "github.com" {
-		fmt.Printf("DEBUG: found a github.com address")
 		return github.NewClient(tokenClient), nil
 	} else {
-		fmt.Printf("DEBUG: found an enterprise github address")
 		return github.NewEnterpriseClient(enterpriseURL, enterpriseURL, tokenClient)
 	}
 }

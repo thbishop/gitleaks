@@ -186,7 +186,7 @@ func (opts *Options) parseOptions(args []string) error {
 				if opts.LocalMode {
 					opts.RepoPath = filepath.Clean(args[i])
 				} else {
-				    opts.URL = args[i]
+					opts.URL = args[i]
                 }
 			} else {
 				help()
