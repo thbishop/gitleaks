@@ -106,7 +106,7 @@ func (owner *Owner) fetchRepos() error {
 		owner.repos = append(owner.repos, *repo)
 	} else {
 		// org or user account type, would fail if not valid before
-		gitClient, err := githubClient(opts.URL, opts.EnterpriseURL)
+		gitClient, err := githubClient(opts.URL, opts.EnterpriseMode)
 		if err != nil {
 			return err
 		}
@@ -277,21 +277,26 @@ func githubTokenClient() *http.Client {
 	return tokenClient
 }
 
-// githubClient will return an appropriate client based on the repo URL and/or
-// the enterprise URL that is provided.
-func githubClient(repoURL string, enterpriseURL string) (*github.Client, error) {
-	fmt.Printf("DEBUG: our url is: %s\n\n", opts.URL)
+// githubClient will return an appropriate client based on the URL and
+// enterprise mode provided. When requesting enterprise mode GitHub Enterprise
+// API V3 is assumed.
+func githubClient(optURL string, enterpriseMode bool) (*github.Client, error) {
+	fmt.Printf("DEBUG: our url is: %s\n\n", optURL)
+	tokenClient := githubTokenClient()
 
-	u, err := url.Parse(repoURL)
+	if enterpriseMode {
+		return github.NewClient(tokenClient), nil
+	}
+
+	// build the enterprise url
+	u, err := url.Parse(optURL)
 	if err != nil {
 		return &github.Client{}, err
 	}
 
-	tokenClient := githubTokenClient()
+	u.Path = "/api/v3"
+	u.RawQuery = ""
+	enterpriseURL := u.String()
 
-	if u.Hostname() == "github.com" {
-		return github.NewClient(tokenClient), nil
-	} else {
-		return github.NewEnterpriseClient(enterpriseURL, enterpriseURL, tokenClient)
-	}
+	return github.NewEnterpriseClient(enterpriseURL, enterpriseURL, tokenClient)
 }
