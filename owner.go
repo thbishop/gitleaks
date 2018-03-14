@@ -281,7 +281,6 @@ func githubTokenClient() *http.Client {
 // enterprise mode provided. When requesting enterprise mode GitHub Enterprise
 // API V3 is assumed.
 func githubClient(optURL string, enterpriseMode bool) (*github.Client, error) {
-	fmt.Printf("DEBUG: our url is: %s\n\n", optURL)
 	tokenClient := githubTokenClient()
 
 	if !enterpriseMode {
