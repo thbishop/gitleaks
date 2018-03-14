@@ -284,7 +284,7 @@ func githubClient(optURL string, enterpriseMode bool) (*github.Client, error) {
 	fmt.Printf("DEBUG: our url is: %s\n\n", optURL)
 	tokenClient := githubTokenClient()
 
-	if enterpriseMode {
+	if !enterpriseMode {
 		return github.NewClient(tokenClient), nil
 	}
 
